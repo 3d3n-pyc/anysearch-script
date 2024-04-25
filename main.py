@@ -2,10 +2,11 @@ import os
 import shlex
 import requests
 import re
+import json
 
 from pystyle import System, Anime, Colors, Colorate, Cursor, Center
 
-version = '1.4'
+version = '1.5'
 
 class colors:
     red = '[38;2;255;0;0m'
@@ -46,7 +47,7 @@ print(watermark
 
 while True:
     try:
-        response:dict = requests.get('https://anysearch.vercel.app/info').json()['data']
+        response:dict = requests.get('http://154.51.39.141:19201/info').json()['data']
         System.Title(f"AnySearch V{version} ╎ {response['count']} keys")
     except:
         System.Title(f"AnySearch V{version}")
@@ -92,13 +93,19 @@ while True:
             print(f'{colors.orange}S\'il vous plaît, mettez votre clé pour rechercher.\n')
             continue
         
-        response:dict = requests.get(f'https://anysearch.vercel.app/api?key={key}&name={value}').json()
+        try:
+            response:requests.Response = requests.get(f'http://154.51.39.141:19201/api?key={key}&name={value}')
+        except:
+            print(f'{colors.red}Impossible de se connecter à l\'API.\n')
+            continue
         
-        if response.get('error') and response.get('error') == 'Rate limit exceeded: Tu fais trop de requêtes !':
+        responseData:dict = json.loads(response.content)
+        
+        if responseData.get('error') and responseData.get('error') == 'Rate limit exceeded: Tu fais trop de requêtes !':
             print(f'{colors.red}Vous faites trop de requêtes ! {colors.gray}(5/minute)\n')
         
-        elif response['code'] == 200:
-            ips = response["data"]
+        elif responseData['code'] == 200:
+            ips = responseData["data"]
             for ip in ips:
                 data:dict = requests.get(f'http://ip-api.com/json/{ip}?fields=mobile,proxy,hosting').json()
                 if data == {}:
@@ -113,10 +120,10 @@ while True:
                     print(f'{colors.green}{ip} {colors.gray}')
             print()
         
-        elif response['code'] == 404:
+        elif responseData['code'] == 404:
             print(f'{colors.red}Aucun résultat trouvé.\n')
         
-        elif response['code'] == 401:
+        elif responseData['code'] == 401:
             print(f'{colors.red}Clé API invalide.\n')
         
         else:
@@ -141,7 +148,13 @@ while True:
             print(f'{colors.orange}S\'il vous plaît, veuillez entrer une adresse IP valide.\n')
             continue
         
-        data:dict = requests.get(f'https://anysearch.vercel.app/api/ip?key={key}&value={ip}').json()
+        try:
+            response:requests.Response = requests.get(f'http://154.51.39.141:19201/api/ip?key={key}&value={ip}')
+        except:
+            print(f'{colors.red}Impossible de se connecter à l\'API.\n')
+            continue
+        
+        data:dict = json.loads(response.content)
         
         if data.get('error') and data.get('error') == 'Rate limit exceeded: Tu fais trop de requêtes !':
             print(f'{colors.red}Vous faites trop de requêtes ! {colors.gray}(5/minute)\n')
@@ -227,14 +240,20 @@ while True:
     
     
     if command[0] == 'info':
-        response:dict = requests.get('https://anysearch.vercel.app/info').json()['data']
+        try:
+            response:requests.Response = requests.get(f'http://154.51.39.141:19201/info')
+        except:
+            print(f'{colors.red}Impossible de se connecter à l\'API.\n')
+            continue
+        
+        data:dict = json.loads(response.content)['data']
 
         print(f'''\
 {colors.gray}Version: {colors.light_gray}{version}
-{colors.gray}API Version: {colors.light_gray}{response['version']}
+{colors.gray}API Version: {colors.light_gray}{data['version']}
 {colors.gray}Auteur: {colors.light_gray}@3d3n.pyc
 
-{colors.gray}Elements dans la base de données: {colors.light_gray}{response['count']}
+{colors.gray}Elements dans la base de données: {colors.light_gray}{data['count']}
 ''')
         continue
     
