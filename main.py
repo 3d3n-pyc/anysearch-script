@@ -1,10 +1,8 @@
 import os
 import shlex
-import requests
 import re
 import json
-
-from pystyle import System, Anime, Colors, Colorate, Cursor, Center
+import httpx
 
 version = '1.5'
 
@@ -29,13 +27,6 @@ watermark = '''
  ██║  ██║██║ ╚████║   ██║   ███████║███████╗██║  ██║██║  ██║╚██████╗██║  ██║
  ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝'''
 
-Cursor.HideCursor()
-System.Title('Press ENTER to continue')
-Anime.Fade(Center.Center(watermark), Colors.purple_to_blue, Colorate.Vertical, interval=0.100, enter=True)
-
-Cursor.ShowCursor()
-System.Title(f'AnySearch V{version}')
-
 print(watermark
       .replace('█', colors.purple + '█')
       .replace('╗', colors.blue + '╗')
@@ -47,10 +38,8 @@ print(watermark
 
 while True:
     try:
-        response:dict = requests.get('http://154.51.39.141:19201/info').json()['data']
-        System.Title(f"AnySearch V{version} ╎ {response['count']} keys")
+        response:dict = httpx.get('http://154.51.39.141:19201/info').json()['data']
     except:
-        System.Title(f"AnySearch V{version}")
         print(f"{colors.red}Impossible de se connecter à l'API.\n")
     
     command = shlex.split(input(f'''{colors.purple}┌──({colors.blue}AnySearch{colors.purple})-[{colors.white}~{colors.purple}]
@@ -94,7 +83,7 @@ while True:
             continue
         
         try:
-            response:requests.Response = requests.get(f'http://154.51.39.141:19201/api?key={key}&name={value}')
+            response:httpx.Response = httpx.get(f'http://154.51.39.141:19201/api?key={key}&name={value}')
         except:
             print(f'{colors.red}Impossible de se connecter à l\'API.\n')
             continue
@@ -107,7 +96,7 @@ while True:
         elif responseData['code'] == 200:
             ips = responseData["data"]
             for ip in ips:
-                data:dict = requests.get(f'http://ip-api.com/json/{ip}?fields=mobile,proxy,hosting').json()
+                data:dict = httpx.get(f'http://ip-api.com/json/{ip}?fields=mobile,proxy,hosting').json()
                 if data == {}:
                     print(f'{colors.red}{ip} {colors.gray}(erreur)')
                 elif data['hosting']:
@@ -149,7 +138,7 @@ while True:
             continue
         
         try:
-            response:requests.Response = requests.get(f'http://154.51.39.141:19201/api/ip?key={key}&value={ip}')
+            response:httpx.Response = httpx.get(f'http://154.51.39.141:19201/api/ip?key={key}&value={ip}')
         except:
             print(f'{colors.red}Impossible de se connecter à l\'API.\n')
             continue
@@ -193,8 +182,8 @@ while True:
             print(f'{colors.orange}S\'il vous plaît, veuillez entrer une adresse IP valide.\n')
             continue
         
-        data:dict = requests.get(f'http://ip-api.com/json/{ip}').json()
-        data2:dict = requests.get(f'http://ip-api.com/json/{ip}?fields=mobile,proxy,hosting').json()
+        data:dict = httpx.get(f'http://ip-api.com/json/{ip}').json()
+        data2:dict = httpx.get(f'http://ip-api.com/json/{ip}?fields=mobile,proxy,hosting').json()
         
         content = ''
         
@@ -241,7 +230,7 @@ while True:
     
     if command[0] == 'info':
         try:
-            response:requests.Response = requests.get(f'http://154.51.39.141:19201/info')
+            response:httpx.Response = httpx.get(f'http://154.51.39.141:19201/info')
         except:
             print(f'{colors.red}Impossible de se connecter à l\'API.\n')
             continue
