@@ -2,7 +2,8 @@ import os
 import shlex
 import re
 import json
-import httpx
+import urllib.request
+import urllib.response
 
 version = '1.5'
 
@@ -37,11 +38,6 @@ print(watermark
       + '\n' + colors.white)
 
 while True:
-    try:
-        response:dict = httpx.get('http://154.51.39.141:19201/info').json()['data']
-    except:
-        print(f"{colors.red}Impossible de se connecter à l'API.\n")
-    
     command = shlex.split(input(f'''{colors.purple}┌──({colors.blue}AnySearch{colors.purple})-[{colors.white}~{colors.purple}]
 └─{colors.blue}$ {colors.white}'''))
     
@@ -83,12 +79,13 @@ while True:
             continue
         
         try:
-            response:httpx.Response = httpx.get(f'http://154.51.39.141:19201/api?key={key}&name={value}')
+            response:urllib.response = urllib.request.urlopen(f'http://154.51.39.141:19201/api?key={key}&name={value}')
+            content = response.read().decode()
         except:
             print(f'{colors.red}Impossible de se connecter à l\'API.\n')
             continue
         
-        responseData:dict = json.loads(response.content)
+        responseData:dict = json.loads(content)
         
         if responseData.get('error') and responseData.get('error') == 'Rate limit exceeded: Tu fais trop de requêtes !':
             print(f'{colors.red}Vous faites trop de requêtes ! {colors.gray}(5/minute)\n')
@@ -96,7 +93,9 @@ while True:
         elif responseData['code'] == 200:
             ips = responseData["data"]
             for ip in ips:
-                data:dict = httpx.get(f'http://ip-api.com/json/{ip}?fields=mobile,proxy,hosting').json()
+                response:urllib.response = urllib.request.urlopen(f'http://ip-api.com/json/{ip}?fields=mobile,proxy,hosting')
+                content = response.read().decode()
+                data:dict = json.loads(content)
                 if data == {}:
                     print(f'{colors.red}{ip} {colors.gray}(erreur)')
                 elif data['hosting']:
@@ -138,12 +137,13 @@ while True:
             continue
         
         try:
-            response:httpx.Response = httpx.get(f'http://154.51.39.141:19201/api/ip?key={key}&value={ip}')
+            response:urllib.response = urllib.request.urlopen(f'http://154.51.39.141:19201/api/ip?key={key}&value={ip}')
+            content = response.read().decode()
         except:
             print(f'{colors.red}Impossible de se connecter à l\'API.\n')
             continue
         
-        data:dict = json.loads(response.content)
+        data:dict = json.loads(content)
         
         if data.get('error') and data.get('error') == 'Rate limit exceeded: Tu fais trop de requêtes !':
             print(f'{colors.red}Vous faites trop de requêtes ! {colors.gray}(5/minute)\n')
@@ -182,8 +182,13 @@ while True:
             print(f'{colors.orange}S\'il vous plaît, veuillez entrer une adresse IP valide.\n')
             continue
         
-        data:dict = httpx.get(f'http://ip-api.com/json/{ip}').json()
-        data2:dict = httpx.get(f'http://ip-api.com/json/{ip}?fields=mobile,proxy,hosting').json()
+        response:urllib.response = urllib.request.urlopen(f'http://ip-api.com/json/{ip}')
+        content = response.read().decode()
+        data:dict = json.loads(content)
+        
+        response2:urllib.response = urllib.request.urlopen(f'http://ip-api.com/json/{ip}?fields=mobile,proxy,hosting')
+        content2 = response2.read().decode()
+        data2:dict = json.loads(content2)
         
         content = ''
         
@@ -230,12 +235,13 @@ while True:
     
     if command[0] == 'info':
         try:
-            response:httpx.Response = httpx.get(f'http://154.51.39.141:19201/info')
+            response:urllib.response = urllib.request.urlopen(f'http://154.51.39.141:19201/info')
+            content = response.read().decode()
         except:
             print(f'{colors.red}Impossible de se connecter à l\'API.\n')
             continue
         
-        data:dict = json.loads(response.content)['data']
+        data:dict = json.loads(content)['data']
 
         print(f'''\
 {colors.gray}Version: {colors.light_gray}{version}
