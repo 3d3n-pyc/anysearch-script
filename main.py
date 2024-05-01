@@ -187,9 +187,9 @@ class ui:
                     response2 = utils.is_ip_vpn(ip)
                     if response2['hosting'] or response2['proxy'] or response2['mobile']:
                         warn = 'hébergement' if response2['hosting'] else 'proxy' if response2['proxy'] else 'mobile'
-                        print(f'{self.space}{colors.light_red}{'┆' if i != len(response['data'][database]) - 1 else '╰'} {colors.orange}{ip} {colors.white}({colors.orange}{warn}{colors.white})')
+                        print(f"{self.space}{colors.light_red}{'┆' if i != len(response['data'][database]) - 1 else '╰'} {colors.orange}{ip} {colors.white}({colors.orange}{warn}{colors.white})")
                     else:
-                        print(f'{self.space}{colors.light_red}{'┆' if i != len(response['data'][database]) - 1 else '╰'} {colors.white}{ip}{colors.white}')
+                        print(f"{self.space}{colors.light_red}{'┆' if i != len(response['data'][database]) - 1 else '╰'} {colors.white}{ip}{colors.white}")
         
         input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
     
