@@ -301,7 +301,6 @@ class ui:
             
             for content in contents:
                 timestamp = content['timestamp'].strftime('%d/%m/%Y %H:%M:%S')
-                print(content)
                 
                 if content['type'] == 'sent_messages':
                     event = 'Message envoyé'
