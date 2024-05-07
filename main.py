@@ -184,7 +184,8 @@ class ui:
             for database in response['data']:
                 print(f'\n{self.space}{colors.light_red}• {colors.white}{database} {colors.white}')
                 for i, ip in enumerate(response['data'][database]):
-                    response2 = utils.is_ip_vpn(ip)
+                    try: response2 = utils.is_ip_vpn(ip)
+                    except: response2 = {'hosting': False, 'proxy': False, 'mobile': False}
                     if response2['hosting'] or response2['proxy'] or response2['mobile']:
                         warn = 'hébergement' if response2['hosting'] else 'proxy' if response2['proxy'] else 'mobile'
                         print(f"{self.space}{colors.light_red}{'┆' if i != len(response['data'][database]) - 1 else '╰'} {colors.orange}{ip} {colors.white}({colors.orange}{warn}{colors.white})")
@@ -300,6 +301,7 @@ class ui:
             
             for content in contents:
                 timestamp = content['timestamp'].strftime('%d/%m/%Y %H:%M:%S')
+                print(content)
                 
                 if content['type'] == 'sent_messages':
                     event = 'Message envoyé'
@@ -373,8 +375,8 @@ class ui:
                     print(f'\n{self.space}{colors.light_red}• {colors.white}{event} sur {colors.light_red}{guild}{colors.white} le {colors.light_red}{timestamp}{colors.white}')
                 
                 elif content['type'] == 'user_updates':
-                    before = content['before']
-                    after = content['after']
+                    before = content['before_data']
+                    after = content['after_data']
                     
                     if before['name'] != after['name']:
                         print(f'\n{self.space}{colors.light_red}• {colors.white}Nom changé de {colors.light_red}{before["name"]} {colors.white}à {colors.light_red}{after["name"]}{colors.white} le {colors.light_red}{timestamp}{colors.white}')
