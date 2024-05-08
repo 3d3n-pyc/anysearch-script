@@ -1,7 +1,7 @@
 from os         import system, name, path
 from urllib     import request, parse, error
 from ctypes     import windll
-from json       import loads
+from json       import loads, dump
 from datetime   import datetime
 
 version = '2.0'
@@ -44,6 +44,26 @@ class utilsClass:
     def __init__(self):
         self.space = ' '*10
         self.host = 'http://154.51.39.141:19201'
+    
+    def get_config(self):
+        if not path.exists('config.json'):
+            default = {
+                'spy': {
+                    'sent_messages': True,
+                    'deleted_messages': True,
+                    'edited_messages': True,
+                    'member_joins': True,
+                    'member_leaves': True,
+                    'member_bans': True,
+                    'member_unbans': True,
+                    'user_updates': True,
+                    'voice_state_updates': True
+                }
+            }
+            dump(default, open('config.json', 'w'), indent=4)
+            return default
+        
+        return loads( open('config.json', 'r').read() )
     
     def get_key(self):
         if not path.exists('KEY'):
@@ -151,8 +171,9 @@ class ui:
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}2{colors.white}) Recherche à partir d\'une IP'
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}3{colors.white}) Lookup une IP'
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}4{colors.white}) Logs d\'un ID Discord'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}5{colors.white}) Changer la clé API'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}6{colors.white}) Informations par rapport à l\'API'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}5{colors.white}) Configuration des logs'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}6{colors.white}) Changer la clé API'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}7{colors.white}) Informations par rapport à l\'API'
             f'\n{self.space}{colors.light_red}└─ • {colors.white}'
         )
     
@@ -301,8 +322,9 @@ class ui:
             
             for content in contents:
                 timestamp = content['timestamp'].strftime('%d/%m/%Y %H:%M:%S')
+                config = utils.get_config()
                 
-                if content['type'] == 'sent_messages':
+                if content['type'] == 'sent_messages' and config['spy']['sent_messages']:
                     event = 'Message envoyé'
                     channel = content['channel_id']
                     guild = utils.get_guild(channel)
@@ -316,7 +338,7 @@ class ui:
                         else:
                             print(f'{self.space}{colors.light_red}╰ {colors.white}{line}')
                 
-                elif content['type'] == 'deleted_messages':
+                elif content['type'] == 'deleted_messages' and config['spy']['deleted_messages']:
                     event = 'Message supprimé'
                     channel = content['channel_id']
                     guild = utils.get_guild(channel)
@@ -330,7 +352,7 @@ class ui:
                         else:
                             print(f'{self.space}{colors.light_red}╰ {colors.white}{line}')
                 
-                elif content['type'] == 'edited_messages':
+                elif content['type'] == 'edited_messages' and config['spy']['edited_messages']:
                     if content['before_content'] == content['after_content']:
                         continue
                     
@@ -353,27 +375,27 @@ class ui:
                         else:
                             print(f'{self.space}{colors.light_red}╰ {colors.white}{line}')
                 
-                elif content['type'] == 'member_joins':
+                elif content['type'] == 'member_joins' and config['spy']['member_joins']:
                     event = 'Serveur rejoint'
                     guild = utils.get_guild_name(content['guild_id'])
                     print(f'\n{self.space}{colors.light_red}• {colors.white}{event} nommé {colors.light_red}{guild}{colors.white} le {colors.light_red}{timestamp}{colors.white}')
                 
-                elif content['type'] == 'member_leaves':
+                elif content['type'] == 'member_leaves' and config['spy']['member_leaves']:
                     event = 'Serveur quitté'
                     guild = utils.get_guild_name(content['guild_id'])
                     print(f'\n{self.space}{colors.light_red}• {colors.white}{event} nommé {colors.light_red}{guild}{colors.white} le {colors.light_red}{timestamp}{colors.white}')
                 
-                elif content['type'] == 'member_bans':
+                elif content['type'] == 'member_bans' and config['spy']['member_bans']:
                     event = 'Membre banni'
                     guild = utils.get_guild_name(content['guild_id'])
                     print(f'\n{self.space}{colors.light_red}• {colors.white}{event} sur {colors.light_red}{guild}{colors.white} le {colors.light_red}{timestamp}{colors.white}')
                 
-                elif content['type'] == 'member_unbans':
+                elif content['type'] == 'member_unbans' and config['spy']['member_unbans']:
                     event = 'Membre débanni'
                     guild = utils.get_guild_name(content['guild_id'])
                     print(f'\n{self.space}{colors.light_red}• {colors.white}{event} sur {colors.light_red}{guild}{colors.white} le {colors.light_red}{timestamp}{colors.white}')
                 
-                elif content['type'] == 'user_updates':
+                elif content['type'] == 'user_updates' and config['spy']['user_updates']:
                     before = content['before_data']
                     after = content['after_data']
                     
@@ -386,7 +408,7 @@ class ui:
                     else:
                         continue
                 
-                elif content['type'] == 'voice_state_updates':
+                elif content['type'] == 'voice_state_updates' and config['spy']['voice_state_updates']:
                     if content['before_data']['channel_id'] == None and content['after_data']['channel_id'] != None:
                         guild_name = utils.get_guild_name(content['guild_id'])
                         print(
@@ -455,6 +477,51 @@ class ui:
                         continue
         
         input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
+    
+    
+    def configuration(self):
+        while True:
+            self.base()
+
+            config = utils.get_config()
+
+            response = input(
+                f"\n{self.space}{colors.light_red}• {colors.white}Configuration actuelle"
+                f"\n"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}1{colors.white}) Messages envoyés          {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['sent_messages'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}2{colors.white}) Messages supprimés        {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['deleted_messages'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}3{colors.white}) Messages édités           {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['edited_messages'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}4{colors.white}) Membres rejoins           {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['member_joins'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}5{colors.white}) Membres quittés           {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['member_leaves'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}6{colors.white}) Membres bannis            {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['member_bans'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}7{colors.white}) Membres débannis          {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['member_unbans'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}8{colors.white}) Mises à jour utilisateurs {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['user_updates'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}9{colors.white}) Mises à jour vocal        {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['voice_state_updates'] else f'{colors.light_red}✗'}{colors.white}"
+                f'\n{self.space}{colors.light_red}└─ • {colors.white}'
+            )
+            
+            if response == '':
+                break
+            
+            try:
+                response = int(response)
+            except:
+                continue
+            
+            if response < 1 or response > 9:
+                continue
+            
+            config['spy']['sent_messages'] = not config['spy']['sent_messages'] if response == 1 else config['spy']['sent_messages']
+            config['spy']['deleted_messages'] = not config['spy']['deleted_messages'] if response == 2 else config['spy']['deleted_messages']
+            config['spy']['edited_messages'] = not config['spy']['edited_messages'] if response == 3 else config['spy']['edited_messages']
+            config['spy']['member_joins'] = not config['spy']['member_joins'] if response == 4 else config['spy']['member_joins']
+            config['spy']['member_leaves'] = not config['spy']['member_leaves'] if response == 5 else config['spy']['member_leaves']
+            config['spy']['member_bans'] = not config['spy']['member_bans'] if response == 6 else config['spy']['member_bans']
+            config['spy']['member_unbans'] = not config['spy']['member_unbans'] if response == 7 else config['spy']['member_unbans']
+            config['spy']['user_updates'] = not config['spy']['user_updates'] if response == 8 else config['spy']['user_updates']
+            config['spy']['voice_state_updates'] = not config['spy']['voice_state_updates'] if response == 9 else config['spy']['voice_state_updates']
+            
+            dump(config, open('config.json', 'w'), indent=4)
     
     
     def info(self):
@@ -527,9 +594,13 @@ if __name__ == '__main__':
             continue
         
         if result == '5':
-            ui.new_key()
+            ui.configuration()
             continue
         
         if result == '6':
+            ui.new_key()
+            continue
+        
+        if result == '7':
             ui.info()
             continue
