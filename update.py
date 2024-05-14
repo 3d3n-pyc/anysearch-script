@@ -1,5 +1,5 @@
-from os         import system, name, path
-from urllib     import request, parse, error
+from os         import system
+from urllib     import request
 from time       import sleep
 
 class update:
