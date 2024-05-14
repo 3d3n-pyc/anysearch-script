@@ -4,10 +4,6 @@ from ctypes     import windll
 from json       import loads, dump
 from datetime   import datetime
 
-version = '2.1'
-
-if name == 'nt':
-    windll.kernel32.SetConsoleTitleW(f'AnySearch v{version} - @3D3N')
 
 class colors:
     light_red = '\033[91m'
@@ -40,10 +36,21 @@ class requests:
         return loads( resp.read().decode() )
 
 
+
+version = open('VERSION', 'r').read() if path.exists('VERSION') else 'Aucune version'
+
+if name == 'nt':
+    windll.kernel32.SetConsoleTitleW(f'AnySearch v{version} - @3D3N')
+
+
 class utilsClass:
     def __init__(self):
         self.space = ' '*10
         self.host = 'http://154.51.39.141:19201'
+    
+    def update(self):
+        system('start update.py')
+        exit()
     
     def get_config(self):
         if not path.exists('config.json'):
@@ -181,6 +188,9 @@ class ui:
         
         if api_version != version:
             print(f'\n{self.space}{colors.light_red}• {colors.white}Une nouvelle version du tool est disponible ({colors.light_red}{api_version}{colors.white}){colors.reset}')
+            response = input('\n' + self.space + colors.light_red + '• ' + colors.white + 'Voulez-vous mettre à jour le tool ? (o/n) ' + colors.reset)
+            if response.lower() == 'o':
+                utils.update()
     
     def menu(self):
         self.base()
