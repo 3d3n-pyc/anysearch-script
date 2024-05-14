@@ -4,7 +4,7 @@ from ctypes     import windll
 from json       import loads, dump
 from datetime   import datetime
 
-version = '2.0'
+version = '2.1'
 
 if name == 'nt':
     windll.kernel32.SetConsoleTitleW(f'AnySearch v{version} - @3D3N')
@@ -123,9 +123,22 @@ class utilsClass:
         response = requests.get(f'{self.host}/spy/user', params={'key': self.get_key(), 'user': user})
         return response
     
+    def spy_channel(self, channel):
+        response = requests.get(f'{self.host}/spy/channel', params={'key': self.get_key(), 'channel': channel})
+        return response
+    
+    def spy_guild(self, guild):
+        response = requests.get(f'{self.host}/spy/guild', params={'key': self.get_key(), 'guild': guild})
+        return response
+    
     def get_guild_list(self):
         response = requests.get(f'{self.host}/spy/list')
         return response
+
+    def get_user_data(self, user_id: int) -> dict:
+        response = requests.get(f'{self.host}/data/user', params={'user': user_id})
+        return response
+    
     
     def get_guild(self, channel_id: int) -> str:
         response = self.get_guild_list()
@@ -146,6 +159,7 @@ class utilsClass:
 
 utils = utilsClass()
 
+api_version = utils.get_info()['data']['version']
 
 class ui:
     def __init__(self):
@@ -160,9 +174,13 @@ class ui:
             f'\n{self.space}{colors.light_red}┛┗┛┗┗┫┗┛┗ ┗┻┛ ┗━┛┗   ┻ ┗┛┗┛┗{colors.reset}',
             f'\n{self.space}{colors.light_red}     ┛                      {colors.reset}',
             f'\n',
-            f'\n{self.space}{colors.light_red}⚡{colors.white}Développé par {colors.light_red}@3D3N{colors.reset}',
-            f'\n{self.space}{colors.light_red}⚡{colors.white}Version: {colors.light_red}{version}{colors.reset}'
+            f'\n{self.space}{colors.light_red}⚡{colors.white}Développé par {colors.light_red}@3d3n.pyc{colors.reset}',
+            f'\n{self.space}{colors.light_red}⚡{colors.white}Version: {colors.light_red}{version}{colors.reset}',
+            f'\n{self.space}{colors.light_red}⚡{colors.white}GitHub: {colors.light_red}https://github.com/3d3n-pyc{colors.reset}'
         )
+        
+        if api_version != version:
+            print(f'\n{self.space}{colors.light_red}• {colors.white}Une nouvelle version du tool est disponible ({colors.light_red}{api_version}{colors.white}){colors.reset}')
     
     def menu(self):
         self.base()
@@ -170,10 +188,12 @@ class ui:
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}1{colors.white}) Recherche à partir d\'un pseudo'
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}2{colors.white}) Recherche à partir d\'une IP'
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}3{colors.white}) Lookup une IP'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}4{colors.white}) Logs d\'un ID Discord'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}5{colors.white}) Configuration des logs'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}6{colors.white}) Changer la clé API'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}7{colors.white}) Informations par rapport à l\'API'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}4{colors.white}) Logs d\'un utilisateur Discord'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}5{colors.white}) Logs d\'un salon Discord'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}6{colors.white}) Logs d\'un serveur Discord'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}7{colors.white}) Configuration des logs'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}8{colors.white}) Changer la clé API'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}9{colors.white}) Informations par rapport à l\'API'
             f'\n{self.space}{colors.light_red}└─ • {colors.white}'
         )
     
@@ -283,7 +303,7 @@ class ui:
         input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
     
     
-    def logs(self):
+    def logs_user(self):
         self.base()
         
         value = input(f'\n{self.space}{colors.light_red}• {colors.white}Entrez l\'ID Discord à rechercher: {colors.light_red}')
@@ -312,13 +332,16 @@ class ui:
                 for item in result['data'][message_type]:
                     item['type'] = message_type
             
-            
             contents:list = result['data']['sent_messages'] + result['data']['deleted_messages'] + result['data']['edited_messages'] + result['data']['member_joins'] + result['data']['member_leaves'] + result['data']['member_bans'] + result['data']['member_unbans'] + result['data']['user_updates'] + result['data']['voice_state_updates']
+            
+            if len(contents) == 0:
+                print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Aucun contenu trouvé{colors.reset}')
+                input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
+                return
+            
             for content in contents:
                 content['timestamp'] = datetime.strptime(content['timestamp'].replace('T', ' ').replace('+00:00', '').split('.')[0], '%Y-%m-%d %H:%M:%S')
             contents.sort(key=lambda x: x['timestamp'], reverse=True)
-            
-            guild_list = utils.get_guild_list()
             
             for content in contents:
                 timestamp = content['timestamp'].strftime('%d/%m/%Y %H:%M:%S')
@@ -479,6 +502,271 @@ class ui:
         input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
     
     
+    def logs_channel(self):
+        self.base()
+        
+        value = input(f'\n{self.space}{colors.light_red}• {colors.white}Entrez l\'ID Discord du salon à rechercher: {colors.light_red}')
+        
+        if not value:
+            return
+        
+        print(f'\n{self.space}{colors.white}( {colors.tan}⚡{colors.white}) {colors.tan}Recherche de l\'ID Discord{colors.reset}')
+        
+        try:
+            result = utils.spy_channel(value)
+        except error.HTTPError:
+            cooldown = utils.get_cooldown()
+            if cooldown['amount'] > cooldown['maximum']:
+                result = {'code': 429}
+            else:
+                result = {'code': 404}
+        
+        if result['code'] == 404:
+            print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}ID Discord introuvable{colors.reset}')
+        elif result['code'] == 429:
+            print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Vous faites trop de requêtes !{colors.reset}')
+        else:
+            print(f'\n{self.space}{colors.white}( {colors.light_green}⚡{colors.white}) {colors.light_green}ID Discord trouvé !{colors.reset}')
+            for message_type in ['sent_messages', 'deleted_messages', 'edited_messages']:
+                for item in result['data'][message_type]:
+                    item['type'] = message_type
+            
+            contents:list = result['data']['sent_messages'] + result['data']['deleted_messages'] + result['data']['edited_messages']
+            
+            if len(contents) == 0:
+                print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Aucun contenu trouvé{colors.reset}')
+                input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
+                return
+            
+            for content in contents:
+                content['timestamp'] = datetime.strptime(content['timestamp'].replace('T', ' ').replace('+00:00', '').split('.')[0], '%Y-%m-%d %H:%M:%S')
+            contents.sort(key=lambda x: x['timestamp'], reverse=True)
+            
+            for content in contents:
+                timestamp = content['timestamp'].strftime('%d/%m/%Y %H:%M:%S')
+                config = utils.get_config()
+                
+                if content['type'] == 'sent_messages' and config['spy']['sent_messages']:
+                    event = 'Message envoyé'
+                    channel = content['channel_id']
+                    guild = utils.get_guild(channel)
+                    message = content['content'].split('\n')
+                    
+                    print(f'\n{self.space}{colors.light_red}• {colors.white}{event} dans {colors.light_red}#{channel} {colors.white}({colors.light_red}{guild}{colors.white}) le {colors.light_red}{timestamp}{colors.white}')
+                    
+                    for i, line in enumerate(message):
+                        if i != len(message) - 1:
+                            print(f'{self.space}{colors.light_red}┆ {colors.white}{line}')
+                        else:
+                            print(f'{self.space}{colors.light_red}╰ {colors.white}{line}')
+                
+                elif content['type'] == 'deleted_messages' and config['spy']['deleted_messages']:
+                    event = 'Message supprimé'
+                    channel = content['channel_id']
+                    guild = utils.get_guild(channel)
+                    message = content['content'].split('\n')
+                    
+                    print(f'\n{self.space}{colors.light_red}• {colors.white}{event} dans {colors.light_red}#{channel} {colors.white}({colors.light_red}{guild}{colors.white}) le {colors.light_red}{timestamp}{colors.white}')
+                    
+                    for i, line in enumerate(message):
+                        if i != len(message) - 1:
+                            print(f'{self.space}{colors.light_red}┆ {colors.white}{line}')
+                        else:
+                            print(f'{self.space}{colors.light_red}╰ {colors.white}{line}')
+                
+                elif content['type'] == 'edited_messages' and config['spy']['edited_messages']:
+                    if content['before_content'] == content['after_content']:
+                        continue
+                    
+                    event = 'Message édité'
+                    channel = content['channel_id']
+                    guild = utils.get_guild(channel)
+                    before = content['before_content'].split('\n')
+                    after = content['after_content'].split('\n')
+                    
+                    print(f'\n{self.space}{colors.light_red}• {colors.white}{event} dans {colors.light_red}#{channel} {colors.white}({colors.light_red}{guild}{colors.white}) le {colors.light_red}{timestamp}{colors.white}')
+                
+                    for line in before:
+                        print(f'{self.space}{colors.light_red}┆ {colors.white}{line}')
+                        
+                    print(f'{self.space}{colors.light_red}├{"─"*3}')
+                    
+                    for i, line in enumerate(after):
+                        if i != len(after) - 1:
+                            print(f'{self.space}{colors.light_red}┆ {colors.white}{line}')
+                        else:
+                            print(f'{self.space}{colors.light_red}╰ {colors.white}{line}')
+                            
+        input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
+        
+    
+    def logs_guild(self):
+        self.base()
+        
+        value = input(f'\n{self.space}{colors.light_red}• {colors.white}Entrez l\'ID Discord du serveur à rechercher: {colors.light_red}')
+        
+        if not value:
+            return
+        
+        print(f'\n{self.space}{colors.white}( {colors.tan}⚡{colors.white}) {colors.tan}Recherche de l\'ID Discord{colors.reset}')
+        
+        try:
+            result = utils.spy_guild(value)
+        except error.HTTPError:
+            cooldown = utils.get_cooldown()
+            if cooldown['amount'] > cooldown['maximum']:
+                result = {'code': 429}
+            else:
+                result = {'code': 404}
+        
+        if result['code'] == 404:
+            print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}ID Discord introuvable{colors.reset}')
+        elif result['code'] == 429:
+            print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Vous faites trop de requêtes !{colors.reset}')
+        else:
+            print(f'\n{self.space}{colors.white}( {colors.light_green}⚡{colors.white}) {colors.light_green}ID Discord trouvé !{colors.reset}')
+            for message_type in ['member_joins', 'member_leaves', 'member_bans', 'member_unbans', 'guild_updates', 'voice_state_updates']:
+                for item in result['data'][message_type]:
+                    item['type'] = message_type
+            
+            contents:list = result['data']['member_joins'] + result['data']['member_leaves'] + result['data']['member_bans'] + result['data']['member_unbans'] + result['data']['guild_updates'] + result['data']['voice_state_updates']
+            
+            if len(contents) == 0:
+                print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Aucun contenu trouvé{colors.reset}')
+                input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
+                return
+            
+            for content in contents:
+                content['timestamp'] = datetime.strptime(content['timestamp'].replace('T', ' ').replace('+00:00', '').split('.')[0], '%Y-%m-%d %H:%M:%S')
+            contents.sort(key=lambda x: x['timestamp'], reverse=True)
+            
+            for content in contents:
+                timestamp = content['timestamp'].strftime('%d/%m/%Y %H:%M:%S')
+                config = utils.get_config()
+                
+                if content['type'] == 'member_joins' and config['spy']['member_joins']:
+                    try:
+                        user = utils.get_user_data(content['user_id'])['data']['name']
+                    except error.HTTPError:
+                        user = content['user_id']
+                    
+                    event = 'a rejoint'
+                    print(f'\n{self.space}{colors.light_red}• {colors.light_red}{user} {colors.white}{event} le serveur le {colors.light_red}{timestamp}{colors.white}')
+                
+                elif content['type'] == 'member_leaves' and config['spy']['member_leaves']:
+                    try:
+                        user = utils.get_user_data(content['user_id'])['data']['name']
+                    except error.HTTPError:
+                        user = content['user_id']
+                    
+                    event = 'a quitté'
+                    print(f'\n{self.space}{colors.light_red}• {colors.light_red}{user} {colors.white}{event} le serveur le {colors.light_red}{timestamp}{colors.white}')
+                
+                elif content['type'] == 'member_bans' and config['spy']['member_bans']:
+                    try:
+                        user = utils.get_user_data(content['user_id'])['data']['name']
+                    except error.HTTPError:
+                        user = content['user_id']
+                    
+                    event = 'a été banni'
+                    print(f'\n{self.space}{colors.light_red}• {colors.light_red}{user} {colors.white}{event} le serveur le {colors.light_red}{timestamp}{colors.white}')
+                
+                elif content['type'] == 'member_unbans' and config['spy']['member_unbans']:
+                    try:
+                        user = utils.get_user_data(content['user_id'])['data']['name']
+                    except error.HTTPError:
+                        user = content['user_id']
+                    
+                    event = 'a été débanni'
+                    print(f'\n{self.space}{colors.light_red}• {colors.light_red}{user} {colors.white}{event} le serveur le {colors.light_red}{timestamp}{colors.white}')
+                
+                elif content['type'] == 'guild_updates' and config['spy']['guild_updates']:
+                    before = content['before_data']
+                    after = content['after_data']
+                    
+                    if before['name'] != after['name']:
+                        print(f'\n{self.space}{colors.light_red}• {colors.white}Le serveur a été renommé le {colors.light_red}{timestamp}{colors.white}')
+                        print(f'{self.space}{colors.light_red}┆ {colors.white}Nom avant {colors.light_gray}-> {colors.light_red}{before["name"]}{colors.white}')
+                        print(f'{self.space}{colors.light_red}╰ {colors.white}Nom après {colors.light_gray}-> {colors.light_red}{after["name"]}{colors.white}')
+
+                    elif before['icon'] != after['icon']:
+                        print(f'\n{self.space}{colors.light_red}• {colors.white}Icône changée le {colors.light_red}{timestamp}{colors.white}')
+                    
+                    else:
+                        continue
+                
+                elif content['type'] == 'voice_state_updates' and config['spy']['voice_state_updates']:
+                    try:
+                        user = utils.get_user_data(content['user_id'])['data']['name']
+                    except error.HTTPError:
+                        user = content['user_id']
+                    
+                    if content['before_data']['channel_id'] == None and content['after_data']['channel_id'] != None:
+                        print(
+                            f'\n{self.space}{colors.light_red}• {colors.light_red}{user} {colors.white}a rejoint un vocal le {colors.light_red}{timestamp}{colors.white}'
+                            f'\n{self.space}{colors.light_red}╰ {colors.white}Salon vocal {colors.light_gray}-> {colors.light_red}#{content["after_data"]["channel_id"]}{colors.white}'
+                        )
+                    
+                    elif content['before_data']['channel_id'] != None and content['after_data']['channel_id'] == None:
+                        print(
+                            f'\n{self.space}{colors.light_red}• {colors.light_red}{user} {colors.white}a quitté un vocal le {colors.light_red}{timestamp}{colors.white}'
+                            f'\n{self.space}{colors.light_red}╰ {colors.white}Salon vocal {colors.light_gray}-> {colors.light_red}#{content["before_data"]["channel_id"]}{colors.white}'
+                        )
+                    
+                    elif content['before_data']['channel_id'] != None and content['after_data']['channel_id'] != None:
+                        if content['before_data']['channel_id'] == content['after_data']['channel_id']:
+                            if content['before_data']['self_deaf'] != content['after_data']['self_deaf']:
+                                if content['after_data']['self_deaf']:
+                                    print(
+                                        f'\n{self.space}{colors.light_red}• {colors.light_red}{user} {colors.white}est en sourdine le {colors.light_red}{timestamp}{colors.white}'
+                                        f'\n{self.space}{colors.light_red}╰ {colors.white}Salon vocal {colors.light_gray}-> {colors.light_red}#{content["after_data"]["channel_id"]}{colors.white}'
+                                    )
+                                else:
+                                    print(
+                                        f'\n{self.space}{colors.light_red}• {colors.light_red}{user} {colors.white}n\'est plus en sourdine le {colors.light_red}{timestamp}{colors.white}'
+                                        f'\n{self.space}{colors.light_red}╰ {colors.white}Salon vocal {colors.light_gray}-> {colors.light_red}#{content["after_data"]["channel_id"]}{colors.white}'
+                                    )
+
+                            elif content['before_data']['self_mute'] != content['after_data']['self_mute']:
+                                if content['after_data']['self_mute']:
+                                    print(
+                                        f'\n{self.space}{colors.light_red}• {colors.light_red}{user} {colors.white}est muet le {colors.light_red}{timestamp}{colors.white}'
+                                        f'\n{self.space}{colors.light_red}╰ {colors.white}Salon vocal {colors.light_gray}-> {colors.light_red}#{content["after_data"]["channel_id"]}{colors.white}'
+                                    )
+                                else:
+                                    print(
+                                        f'\n{self.space}{colors.light_red}• {colors.light_red}{user} {colors.white}n\'est plus muet le {colors.light_red}{timestamp}{colors.white}'
+                                        f'\n{self.space}{colors.light_red}╰ {colors.white}Salon vocal {colors.light_gray}-> {colors.light_red}#{content["after_data"]["channel_id"]}{colors.white}'
+                                    )
+
+                            elif content['before_data']['self_stream'] != content['after_data']['self_stream']:
+                                if content['after_data']['self_stream']:
+                                    print(
+                                        f'\n{self.space}{colors.light_red}• {colors.light_red}{user} {colors.white}est en stream le {colors.light_red}{timestamp}{colors.white}'
+                                        f'\n{self.space}{colors.light_red}╰ {colors.white}Salon vocal {colors.light_gray}-> {colors.light_red}#{content["after_data"]["channel_id"]}{colors.white}'
+                                    )
+                                else:
+                                    print(
+                                        f'\n{self.space}{colors.light_red}• {colors.light_red}{user} {colors.white}n\'est en stream le {colors.light_red}{timestamp}{colors.white}'
+                                        f'\n{self.space}{colors.light_red}╰ {colors.white}Salon vocal {colors.light_gray}-> {colors.light_red}#{content["after_data"]["channel_id"]}{colors.white}'
+                                    )
+
+                            else:
+                                continue
+                        
+                        else:
+                            print(
+                                f'\n{self.space}{colors.light_red}• {colors.white}Salon vocal changé le {colors.light_red}{timestamp}{colors.white}'
+                                f'\n{self.space}{colors.light_red}┆ {colors.white}Ancien salon  {colors.light_gray}-> {colors.light_red}#{content["before_data"]["channel_id"]}{colors.white}'
+                                f'\n{self.space}{colors.light_red}╰ {colors.white}Nouveau salon {colors.light_gray}-> {colors.light_red}#{content["after_data"]["channel_id"]}{colors.white}'
+                            )
+                    
+                    else:
+                        continue
+                
+        input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
+    
+    
     def configuration(self):
         while True:
             self.base()
@@ -488,15 +776,16 @@ class ui:
             response = input(
                 f"\n{self.space}{colors.light_red}• {colors.white}Configuration actuelle"
                 f"\n"
-                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}1{colors.white}) Messages envoyés          {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['sent_messages'] else f'{colors.light_red}✗'}{colors.white}"
-                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}2{colors.white}) Messages supprimés        {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['deleted_messages'] else f'{colors.light_red}✗'}{colors.white}"
-                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}3{colors.white}) Messages édités           {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['edited_messages'] else f'{colors.light_red}✗'}{colors.white}"
-                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}4{colors.white}) Membres rejoins           {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['member_joins'] else f'{colors.light_red}✗'}{colors.white}"
-                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}5{colors.white}) Membres quittés           {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['member_leaves'] else f'{colors.light_red}✗'}{colors.white}"
-                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}6{colors.white}) Membres bannis            {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['member_bans'] else f'{colors.light_red}✗'}{colors.white}"
-                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}7{colors.white}) Membres débannis          {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['member_unbans'] else f'{colors.light_red}✗'}{colors.white}"
-                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}8{colors.white}) Mises à jour utilisateurs {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['user_updates'] else f'{colors.light_red}✗'}{colors.white}"
-                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}9{colors.white}) Mises à jour vocal        {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['voice_state_updates'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}01{colors.white}) Messages envoyés          {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['sent_messages'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}02{colors.white}) Messages supprimés        {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['deleted_messages'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}03{colors.white}) Messages édités           {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['edited_messages'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}04{colors.white}) Serveurs rejoins          {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['member_joins'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}05{colors.white}) Serveurs quittés          {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['member_leaves'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}06{colors.white}) Membres bannis            {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['member_bans'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}07{colors.white}) Membres débannis          {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['member_unbans'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}08{colors.white}) Mises à jour utilisateurs {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['user_updates'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}09{colors.white}) Mises à jour vocal        {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['voice_state_updates'] else f'{colors.light_red}✗'}{colors.white}"
+                f"\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}10{colors.white}) Mises à jour serveur      {colors.light_gray}-> {f'{colors.light_green}✓' if config['spy']['guild_updates'] else f'{colors.light_red}✗'}{colors.white}"
                 f'\n{self.space}{colors.light_red}└─ • {colors.white}'
             )
             
@@ -508,7 +797,7 @@ class ui:
             except:
                 continue
             
-            if response < 1 or response > 9:
+            if response < 1 or response > 10:
                 continue
             
             config['spy']['sent_messages'] = not config['spy']['sent_messages'] if response == 1 else config['spy']['sent_messages']
@@ -520,6 +809,7 @@ class ui:
             config['spy']['member_unbans'] = not config['spy']['member_unbans'] if response == 7 else config['spy']['member_unbans']
             config['spy']['user_updates'] = not config['spy']['user_updates'] if response == 8 else config['spy']['user_updates']
             config['spy']['voice_state_updates'] = not config['spy']['voice_state_updates'] if response == 9 else config['spy']['voice_state_updates']
+            config['spy']['guild_updates'] = not config['spy']['guild_updates'] if response == 10 else config['spy']['guild_updates']
             
             dump(config, open('config.json', 'w'), indent=4)
     
@@ -590,17 +880,25 @@ if __name__ == '__main__':
             continue
         
         if result == '4':
-            ui.logs()
+            ui.logs_user()
             continue
         
         if result == '5':
-            ui.configuration()
+            ui.logs_channel()
             continue
         
         if result == '6':
-            ui.new_key()
+            ui.logs_guild()
             continue
         
         if result == '7':
+            ui.configuration()
+            continue
+        
+        if result == '8':
+            ui.new_key()
+            continue
+        
+        if result == '9':
             ui.info()
             continue
