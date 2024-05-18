@@ -1,3 +1,4 @@
+from traceback  import format_exc
 from os         import system, name, path
 from urllib     import request, parse, error
 from ctypes     import windll
@@ -138,6 +139,10 @@ class utilsClass:
         response = requests.get(f'{self.host}/spy/guild', params={'key': self.get_key(), 'guild': guild})
         return response
     
+    def spy_message(self, message):
+        response = requests.get(f'{self.host}/spy/message', params={'key': self.get_key(), 'value': message})
+        return response
+    
     def get_guild_list(self):
         response = requests.get(f'{self.host}/spy/list')
         return response
@@ -146,6 +151,9 @@ class utilsClass:
         response = requests.get(f'{self.host}/data/user', params={'user': user_id})
         return response
     
+    def lookup_discord(self, user_id: int) -> dict:
+        response = requests.get(f'https://discordlookup.mesavirep.xyz/v1/user/{user_id}')
+        return response
     
     def get_guild(self, channel_id: int) -> str:
         response = self.get_guild_list()
@@ -195,15 +203,17 @@ class ui:
     def menu(self):
         self.base()
         return input(
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}1{colors.white}) Recherche à partir d\'un pseudo'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}2{colors.white}) Recherche à partir d\'une IP'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}3{colors.white}) Lookup une IP'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}4{colors.white}) Logs d\'un utilisateur Discord'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}5{colors.white}) Logs d\'un salon Discord'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}6{colors.white}) Logs d\'un serveur Discord'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}7{colors.white}) Configuration des logs'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}8{colors.white}) Changer la clé API'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}9{colors.white}) Informations par rapport à l\'API'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}01{colors.white}) Recherche à partir d\'un pseudo'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}02{colors.white}) Recherche à partir d\'une IP'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}03{colors.white}) Lookup une IP'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}04{colors.white}) Logs d\'un utilisateur Discord'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}05{colors.white}) Logs d\'un salon Discord'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}06{colors.white}) Logs d\'un serveur Discord'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}07{colors.white}) Logs des messages Discord contenant ...'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}08{colors.white}) Configuration des logs'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}09{colors.white}) Changer la clé API'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}10{colors.white}) Informations par rapport à l\'API'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}11{colors.white}) Fermer le script'
             f'\n{self.space}{colors.light_red}└─ • {colors.white}'
         )
     
@@ -221,7 +231,7 @@ class ui:
             response = utils.search_name(value.replace(' ', '%20'))
         except error.HTTPError:
             cooldown = utils.get_cooldown()
-            if cooldown['amount'] > cooldown['maximum']:
+            if cooldown['amount'] >= cooldown['maximum']:
                 response = {'code': 429}
             else:
                 response = {'code': 404}
@@ -259,7 +269,7 @@ class ui:
             response = utils.search_ip(value)
         except error.HTTPError:
             cooldown = utils.get_cooldown()
-            if cooldown['amount'] > cooldown['maximum']:
+            if cooldown['amount'] >= cooldown['maximum']:
                 response = {'code': 429}
             else:
                 response = {'code': 404}
@@ -321,13 +331,20 @@ class ui:
         if not value:
             return
         
+        try:
+            int(value)
+        except ValueError:
+            print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Nombre invalide{colors.reset}')
+            input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
+            return
+        
         print(f'\n{self.space}{colors.white}( {colors.tan}⚡{colors.white}) {colors.tan}Recherche de l\'ID Discord{colors.reset}')
         
         try:
             result = utils.spy_user(value)
         except error.HTTPError:
             cooldown = utils.get_cooldown()
-            if cooldown['amount'] > cooldown['maximum']:
+            if cooldown['amount'] >= cooldown['maximum']:
                 result = {'code': 429}
             else:
                 result = {'code': 404}
@@ -337,12 +354,29 @@ class ui:
         elif result['code'] == 429:
             print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Vous faites trop de requêtes !{colors.reset}')
         else:
+            contents:list = result['data']['sent_messages'] + result['data']['deleted_messages'] + result['data']['edited_messages'] + result['data']['member_joins'] + result['data']['member_leaves'] + result['data']['member_bans'] + result['data']['member_unbans'] + result['data']['user_updates'] + result['data']['voice_state_updates']
+            
+            if len(contents) == 0:
+                print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Aucun contenu trouvé{colors.reset}')
+                input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
+                return
+            
             print(f'\n{self.space}{colors.white}( {colors.light_green}⚡{colors.white}) {colors.light_green}ID Discord trouvé !{colors.reset}')
+            
+            response = utils.lookup_discord(value)
+            created_at = response['created_at']
+            date = datetime.strptime(created_at.replace('T', ' ').replace('+00:00', '').split('.')[0], '%Y-%m-%d %H:%M:%S').strftime('%d/%m/%Y %H:%M:%S')
+            
+            print(
+                f'\n{self.space}{colors.light_red}• {colors.white}Pseudo   -> {colors.light_red}{response["raw"]["username"] if response["raw"]["discriminator"] == "0" else f"{response["raw"]["username"]}#{response["raw"]["discriminator"]}"}'
+                f'\n{self.space}{colors.light_red}• {colors.white}Créé le  -> {colors.light_red}{date}'
+                f'\n{self.space}{colors.light_red}• {colors.white}Clan     -> {colors.light_red}{response["raw"]["clan"] if response["raw"]["clan"] != None else "Aucun"}'
+            )
+            
             for message_type in ['sent_messages', 'deleted_messages', 'edited_messages', 'member_joins', 'member_leaves', 'member_bans', 'member_unbans', 'user_updates', 'voice_state_updates']:
                 for item in result['data'][message_type]:
                     item['type'] = message_type
-            
-            contents:list = result['data']['sent_messages'] + result['data']['deleted_messages'] + result['data']['edited_messages'] + result['data']['member_joins'] + result['data']['member_leaves'] + result['data']['member_bans'] + result['data']['member_unbans'] + result['data']['user_updates'] + result['data']['voice_state_updates']
+
             
             if len(contents) == 0:
                 print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Aucun contenu trouvé{colors.reset}')
@@ -526,7 +560,7 @@ class ui:
             result = utils.spy_channel(value)
         except error.HTTPError:
             cooldown = utils.get_cooldown()
-            if cooldown['amount'] > cooldown['maximum']:
+            if cooldown['amount'] >= cooldown['maximum']:
                 result = {'code': 429}
             else:
                 result = {'code': 404}
@@ -624,7 +658,7 @@ class ui:
             result = utils.spy_guild(value)
         except error.HTTPError:
             cooldown = utils.get_cooldown()
-            if cooldown['amount'] > cooldown['maximum']:
+            if cooldown['amount'] >= cooldown['maximum']:
                 result = {'code': 429}
             else:
                 result = {'code': 404}
@@ -777,6 +811,103 @@ class ui:
         input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
     
     
+    def logs_messages(self):
+        self.base()
+        
+        value = input(f'\n{self.space}{colors.light_red}• {colors.white}Entrez le message à rechercher: {colors.light_red}')
+        
+        if not value:
+            return
+        
+        print(f'\n{self.space}{colors.white}( {colors.tan}⚡{colors.white}) {colors.tan}Recherche de messages Discord{colors.reset}')
+        
+        try:
+            result = utils.spy_message(value)
+        except error.HTTPError:
+            cooldown = utils.get_cooldown()
+            if cooldown['amount'] >= cooldown['maximum']:
+                result = {'code': 429}
+            else:
+                result = {'code': 404}
+        
+        if result['code'] == 404:
+            print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Aucun message trouvé...{colors.reset}')
+        elif result['code'] == 429:
+            print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Vous faites trop de requêtes !{colors.reset}')
+        else:
+            contents:list = result['data']['sent_messages'] + result['data']['deleted_messages'] + result['data']['edited_messages']
+            if len(contents) == 0:
+                print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Aucun contenu trouvé{colors.reset}')
+                input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
+                return
+            
+            print(f'\n{self.space}{colors.white}( {colors.light_green}⚡{colors.white}) {colors.light_green}Messages trouvés !{colors.reset}')
+            for message_type in ['sent_messages', 'deleted_messages', 'edited_messages']:
+                for item in result['data'][message_type]:
+                    item['type'] = message_type
+            
+            for content in contents:
+                content['timestamp'] = datetime.strptime(content['timestamp'].replace('T', ' ').replace('+00:00', '').split('.')[0], '%Y-%m-%d %H:%M:%S')
+            contents.sort(key=lambda x: x['timestamp'], reverse=True)
+            
+            for content in contents:
+                try:
+                    username = utils.get_user_data(content["author_id"])['data']['name']
+                except error.HTTPError:
+                    username = utils.lookup_discord(content["author_id"])['username']
+                
+                channel = content['channel_id']
+                guild = utils.get_guild(channel)
+                timestamp = content['timestamp'].strftime('%d/%m/%Y %H:%M:%S')
+                config = utils.get_config()
+                
+                if content['type'] == 'sent_messages' and config['spy']['sent_messages']:
+                    event = 'Message envoyé'
+                    message = content['content'].split('\n')
+                    
+                    print(f'\n{self.space}{colors.light_red}• {colors.white}{event} dans {colors.light_red}#{channel} {colors.white}par {colors.light_red}{username} {colors.white}({colors.light_red}{guild}{colors.white}) le {colors.light_red}{timestamp}{colors.white}')
+                    
+                    for i, line in enumerate(message):
+                        if i != len(message) - 1:
+                            print(f'{self.space}{colors.light_red}┆ {colors.white}{line}')
+                        else:
+                            print(f'{self.space}{colors.light_red}╰ {colors.white}{line}')
+                            
+                elif content['type'] == 'deleted_messages' and config['spy']['deleted_messages']:
+                    event = 'Message supprimé'
+                    message = content['content'].split('\n')
+                    
+                    print(f'\n{self.space}{colors.light_red}• {colors.white}{event} dans {colors.light_red}#{channel} {colors.white}par {colors.light_red}{username} {colors.white}({colors.light_red}{guild}{colors.white}) le {colors.light_red}{timestamp}{colors.white}')
+                    
+                    for i, line in enumerate(message):
+                        if i != len(message) - 1:
+                            print(f'{self.space}{colors.light_red}┆ {colors.white}{line}')
+                        else:
+                            print(f'{self.space}{colors.light_red}╰ {colors.white}{line}')
+                            
+                elif content['type'] == 'edited_messages' and config['spy']['edited_messages']:
+                    if content['before_content'] == content['after_content']:
+                        continue
+                    
+                    event = 'Message édité'
+                    before = content['before_content'].split('\n')
+                    after = content['after_content'].split('\n')
+                    
+                    print(f'\n{self.space}{colors.light_red}• {colors.white}{event} dans {colors.light_red}#{channel} {colors.white}par {colors.light_red}{username} {colors.white}({colors.light_red}{guild}{colors.white}) le {colors.light_red}{timestamp}{colors.white}')
+                    
+                    for line in before:
+                        print(f'{self.space}{colors.light_red}┆ {colors.white}{line}')
+                    
+                    print(f'{self.space}{colors.light_red}├{"─"*3}')
+                    
+                    for i, line in enumerate(after):
+                        if i != len(after) - 1:
+                            print(f'{self.space}{colors.light_red}┆ {colors.white}{line}')
+                        else:
+                            print(f'{self.space}{colors.light_red}╰ {colors.white}{line}')
+                            
+        input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
+    
     def configuration(self):
         while True:
             self.base()
@@ -874,41 +1005,67 @@ class ui:
 if __name__ == '__main__':
     ui = ui()
     while True:
-        ui.base()
-        result = ui.menu()
+        try:
+            ui.base()
+            result = ui.menu()
+            
+            try:
+                result = int(result)
+            except:
+                continue
+
+            if result == 1:
+                ui.search()
+                continue
+            
+            if result == 2:
+                ui.linked()
+                continue
+            
+            if result == 3:
+                ui.lookup()
+                continue
+            
+            if result == 4:
+                ui.logs_user()
+                continue
+            
+            if result == 5:
+                ui.logs_channel()
+                continue
+            
+            if result == 6:
+                ui.logs_guild()
+                continue
+                
+            if result == 7:
+                ui.logs_messages()
+                continue
+            
+            if result == 8:
+                ui.configuration()
+                continue
+            
+            if result == 9:
+                ui.new_key()
+                continue
+            
+            if result == 10:
+                ui.info()
+                continue
+            
+            if result == 11:
+                exit()
         
-        if result == '1':
-            ui.search()
+        except KeyboardInterrupt:
             continue
         
-        if result == '2':
-            ui.linked()
-            continue
-        
-        if result == '3':
-            ui.lookup()
-            continue
-        
-        if result == '4':
-            ui.logs_user()
-            continue
-        
-        if result == '5':
-            ui.logs_channel()
-            continue
-        
-        if result == '6':
-            ui.logs_guild()
-            continue
-        
-        if result == '7':
-            ui.configuration()
-            continue
-        
-        if result == '8':
-            ui.new_key()
-            continue
-        
-        if result == '9':
-            ui.info()
+        except Exception as e:
+            ERROR = [line for line in format_exc().split('\n') if line != '']
+            
+            print(f'\n{ui.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Une erreur est survenue{colors.reset}')
+            for i, line in enumerate(ERROR):
+                print(f'  {ui.space}{colors.red}{'┆' if i != len(ERROR) - 1 else '╰'} {colors.white}{line}')
+            
+            input(f'\n{ui.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
             continue
