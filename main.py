@@ -395,6 +395,7 @@ class ui:
                     event = 'Message envoyé'
                     channel = content['channel_id']
                     guild = utils.get_guild(channel)
+                    guild_name = utils.get_guild_name(guild)
                     message = content['content'].split('\n')
                     
                     print(f'\n{self.space}{colors.light_red}• {colors.white}{event} dans {colors.light_red}#{channel} {colors.white}({colors.light_red}{guild}{colors.white}) le {colors.light_red}{timestamp}{colors.white}')
