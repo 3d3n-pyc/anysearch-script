@@ -853,7 +853,8 @@ class ui:
                 try:
                     username = utils.get_user_data(content["author_id"])['data']['name']
                 except error.HTTPError:
-                    username = utils.lookup_discord(content["author_id"])['username']
+                    try: username = utils.lookup_discord(content["author_id"])['username']
+                    except error.HTTPError: username = content["author_id"]
                 
                 channel = content['channel_id']
                 guild = utils.get_guild(channel)
