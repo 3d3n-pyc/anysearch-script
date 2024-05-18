@@ -532,6 +532,7 @@ class ui:
                                 continue
                         
                         else:
+                            guild_name = utils.get_guild_name(content['guild_id'])
                             print(
                                 f'\n{self.space}{colors.light_red}• {colors.white}Salon vocal changé dans {colors.light_red}{guild_name}{colors.white} le {colors.light_red}{timestamp}{colors.white}'
                                 f'\n{self.space}{colors.light_red}┆ {colors.white}Ancien salon  {colors.light_gray}-> {colors.light_red}#{content["before_data"]["channel_id"]}{colors.white}'
