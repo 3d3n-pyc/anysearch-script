@@ -395,7 +395,6 @@ class ui:
                     event = 'Message envoyé'
                     channel = content['channel_id']
                     guild = utils.get_guild(channel)
-                    guild_name = utils.get_guild_name(guild)
                     message = content['content'].split('\n')
                     
                     print(f'\n{self.space}{colors.light_red}• {colors.white}{event} dans {colors.light_red}#{channel} {colors.white}({colors.light_red}{guild}{colors.white}) le {colors.light_red}{timestamp}{colors.white}')
@@ -477,15 +476,14 @@ class ui:
                         continue
                 
                 elif content['type'] == 'voice_state_updates' and config['spy']['voice_state_updates']:
+                    guild_name = utils.get_guild_name(content['guild_id'])
                     if content['before_data']['channel_id'] == None and content['after_data']['channel_id'] != None:
-                        guild_name = utils.get_guild_name(content['guild_id'])
                         print(
                             f'\n{self.space}{colors.light_red}• {colors.white}Vocal rejoint dans {colors.light_red}{guild_name}{colors.white} le {colors.light_red}{timestamp}{colors.white}'
                             f'\n{self.space}{colors.light_red}╰ {colors.white}Salon vocal {colors.light_gray}-> {colors.light_red}#{content["after_data"]["channel_id"]}{colors.white}'
                         )
                     
                     elif content['before_data']['channel_id'] != None and content['after_data']['channel_id'] == None:
-                        guild_name = utils.get_guild_name(content['guild_id'])
                         print(
                             f'\n{self.space}{colors.light_red}• {colors.white}Vocal quitté dans {colors.light_red}{guild_name}{colors.white} le {colors.light_red}{timestamp}{colors.white}'
                             f'\n{self.space}{colors.light_red}╰ {colors.white}Salon vocal {colors.light_gray}-> {colors.light_red}#{content["before_data"]["channel_id"]}{colors.white}'
@@ -493,8 +491,7 @@ class ui:
                     
                     elif content['before_data']['channel_id'] != None and content['after_data']['channel_id'] != None:
                         if content['before_data']['channel_id'] == content['after_data']['channel_id']:
-                            guild_name = utils.get_guild_name(content['guild_id'])
-
+                            
                             if content['before_data']['self_deaf'] != content['after_data']['self_deaf']:
                                 if content['after_data']['self_deaf']:
                                     print(
