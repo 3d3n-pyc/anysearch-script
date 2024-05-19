@@ -65,7 +65,8 @@ class utilsClass:
                     'member_bans': True,
                     'member_unbans': True,
                     'user_updates': True,
-                    'voice_state_updates': True
+                    'voice_state_updates': True,
+                    'guild_updates': True
                 }
             }
             dump(default, open('config.json', 'w'), indent=4)
