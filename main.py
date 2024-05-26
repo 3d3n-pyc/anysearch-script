@@ -65,8 +65,7 @@ class utilsClass:
                     'member_bans': True,
                     'member_unbans': True,
                     'user_updates': True,
-                    'voice_state_updates': True,
-                    'guild_updates': True
+                    'voice_state_updates': True
                 }
             }
             dump(default, open('config.json', 'w'), indent=4)
@@ -152,9 +151,10 @@ class utilsClass:
         response = requests.get(f'{self.host}/data/user', params={'user': user_id})
         return response
     
-    def lookup_discord(self, user_id: int) -> dict:
-        response = requests.get(f'https://discordlookup.mesavirep.xyz/v1/user/{user_id}')
-        return response
+    # API DOWN
+    # def lookup_discord(self, user_id: int) -> dict:
+    #     response = requests.get(f'https://discordlookup.mesavirep.xyz/v1/user/{user_id}')
+    #     return response
     
     def get_guild(self, channel_id: int) -> str:
         response = self.get_guild_list()
@@ -364,14 +364,14 @@ class ui:
             
             print(f'\n{self.space}{colors.white}( {colors.light_green}⚡{colors.white}) {colors.light_green}ID Discord trouvé !{colors.reset}')
             
-            response = utils.lookup_discord(value)
+            response = utils.get_user_data(value)['data']
             created_at = response['created_at']
             date = datetime.strptime(created_at.replace('T', ' ').replace('+00:00', '').split('.')[0], '%Y-%m-%d %H:%M:%S').strftime('%d/%m/%Y %H:%M:%S')
             
             print(
-                f'\n{self.space}{colors.light_red}• {colors.white}Pseudo   -> {colors.light_red}{response["raw"]["username"] if response["raw"]["discriminator"] == "0" else f"{response["raw"]["username"]}#{response["raw"]["discriminator"]}"}'
+                f'\n{self.space}{colors.light_red}• {colors.white}Pseudo   -> {colors.light_red}{response["name"] if response["discriminator"] == "0" else f"{response["name"]}#{response["discriminator"]}"}'
                 f'\n{self.space}{colors.light_red}• {colors.white}Créé le  -> {colors.light_red}{date}'
-                f'\n{self.space}{colors.light_red}• {colors.white}Clan     -> {colors.light_red}{response["raw"]["clan"] if response["raw"]["clan"] != None else "Aucun"}'
+            #   f'\n{self.space}{colors.light_red}• {colors.white}Clan     -> {colors.light_red}{response["raw"]["clan"] if response["raw"]["clan"] != None else "Aucun"}'
             )
             
             for message_type in ['sent_messages', 'deleted_messages', 'edited_messages', 'member_joins', 'member_leaves', 'member_bans', 'member_unbans', 'user_updates', 'voice_state_updates']:
@@ -854,8 +854,7 @@ class ui:
                 try:
                     username = utils.get_user_data(content["author_id"])['data']['name']
                 except error.HTTPError:
-                    try: username = utils.lookup_discord(content["author_id"])['username']
-                    except KeyError: username = content["author_id"]
+                    username = content["author_id"]
                 
                 channel = content['channel_id']
                 guild = utils.get_guild(channel)
