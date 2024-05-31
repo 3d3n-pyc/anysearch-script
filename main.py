@@ -1065,7 +1065,7 @@ if __name__ == '__main__':
             
             print(f'\n{ui.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Une erreur est survenue{colors.reset}')
             for i, line in enumerate(ERROR):
-                print(f'  {ui.space}{colors.red}{'┆' if i != len(ERROR) - 1 else '╰'} {colors.white}{line}')
+                print(f"  {ui.space}{colors.red}{'┆' if i != len(ERROR) - 1 else '╰'} {colors.white}{line}")
             
             input(f'\n{ui.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
             continue
