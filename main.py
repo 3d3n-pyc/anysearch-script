@@ -369,7 +369,7 @@ class ui:
             date = datetime.strptime(created_at.replace('T', ' ').replace('+00:00', '').split('.')[0], '%Y-%m-%d %H:%M:%S').strftime('%d/%m/%Y %H:%M:%S')
             
             print(
-                f'\n{self.space}{colors.light_red}• {colors.white}Pseudo   -> {colors.light_red}{response["name"] if response["discriminator"] == "0" else f"{response["name"]}#{response["discriminator"]}"}'
+                f'\n{self.space}{colors.light_red}• {colors.white}Pseudo   -> {colors.light_red}{response['name'] if response['discriminator'] == "0" else f"{response['name']}#{response['discriminator']}"}'
                 f'\n{self.space}{colors.light_red}• {colors.white}Créé le  -> {colors.light_red}{date}'
             #   f'\n{self.space}{colors.light_red}• {colors.white}Clan     -> {colors.light_red}{response["raw"]["clan"] if response["raw"]["clan"] != None else "Aucun"}'
             )
@@ -1065,7 +1065,7 @@ if __name__ == '__main__':
             
             print(f'\n{ui.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Une erreur est survenue{colors.reset}')
             for i, line in enumerate(ERROR):
-                print(f"  {ui.space}{colors.red}{'┆' if i != len(ERROR) - 1 else '╰'} {colors.white}{line}")
+                print(f'  {ui.space}{colors.red}{'┆' if i != len(ERROR) - 1 else '╰'} {colors.white}{line}')
             
             input(f'\n{ui.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
             continue
