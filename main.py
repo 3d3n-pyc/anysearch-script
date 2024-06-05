@@ -219,7 +219,7 @@ class ui:
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}08{colors.white}) Configuration des logs'
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}09{colors.white}) Changer la clé API'
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}10{colors.white}) Informations par rapport à l\'API'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}11{colors.white}) Patchnotes'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}11{colors.white}) Notes de mise à jour'
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}12{colors.white}) Fermer le script'
             f'\n{self.space}{colors.light_red}└─ • {colors.white}'
         )
