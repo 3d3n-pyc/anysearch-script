@@ -172,6 +172,11 @@ class utilsClass:
                 return guild['name']
 
         return None
+    
+    def get_patchnotes(self) -> dict:
+        response = requests.get(f'{self.host}/patchnotes')
+        return response
+
 
 utils = utilsClass()
 
@@ -214,7 +219,8 @@ class ui:
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}08{colors.white}) Configuration des logs'
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}09{colors.white}) Changer la clé API'
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}10{colors.white}) Informations par rapport à l\'API'
-            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}11{colors.white}) Fermer le script'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}11{colors.white}) Patchnotes'
+            f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}12{colors.white}) Fermer le script'
             f'\n{self.space}{colors.light_red}└─ • {colors.white}'
         )
     
@@ -975,6 +981,20 @@ class ui:
         
         input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
     
+    def patchnotes(self):
+        self.base()
+        
+        result = utils.get_patchnotes()
+        
+        data:list = result['data'].sort(key=lambda x: x['version'].split('.')[1])
+        
+        for item in data:
+            print(f'\n{self.space}{colors.light_red}• {colors.white}Version {colors.light_red}{item["version"]}{colors.white}')
+            for i, line in enumerate(item['data']):
+                print(f'{self.space}{colors.light_red}{'┆' if i != len(item['data']) - 1 else '╰'} {colors.white}{line}')
+
+        input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
+        
     
     def new_key(self):
         self.base()
@@ -1055,6 +1075,10 @@ if __name__ == '__main__':
                 continue
             
             if result == 11:
+                ui.patchnotes()
+                continue
+            
+            if result == 12:
                 exit()
         
         except KeyboardInterrupt:
