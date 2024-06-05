@@ -984,9 +984,8 @@ class ui:
     def patchnotes(self):
         self.base()
         
-        result = utils.get_patchnotes()
-        
-        data:list = result['data'].sort(key=lambda x: x['version'].split('.')[1])
+        result:list = utils.get_patchnotes()['data']
+        data = sorted(result, key=lambda x: int(x['version'].split('.')[1]))
         
         for item in data:
             print(f'\n{self.space}{colors.light_red}• {colors.white}Version {colors.light_red}{item["version"]}{colors.white}')
