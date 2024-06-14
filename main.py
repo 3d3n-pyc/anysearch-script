@@ -373,10 +373,15 @@ class ui:
             response = utils.get_user_data(value)['data']
             created_at = response['created_at']
             date = datetime.strptime(created_at.replace('T', ' ').replace('+00:00', '').split('.')[0], '%Y-%m-%d %H:%M:%S').strftime('%d/%m/%Y %H:%M:%S')
+            mutual_guilds = response['mutual_guilds']
+            _mutual_guilds = ''
+            for i, guild in enumerate(mutual_guilds):
+                _mutual_guilds += f'\n{self.space}{colors.light_red}{'┆' if i != len(mutual_guilds) - 1 else '╰'} {colors.light_red}{guild["name"]} {colors.light_gray}({guild["id"]})'
             
             print(
                 f'\n{self.space}{colors.light_red}• {colors.white}Pseudo   -> {colors.light_red}{response['name'] if response['discriminator'] == "0" else f"{response['name']}#{response['discriminator']}"}'
                 f'\n{self.space}{colors.light_red}• {colors.white}Créé le  -> {colors.light_red}{date}'
+                f'\n{self.space}{colors.light_red}• {colors.white}Serveurs en commun' + _mutual_guilds
             #   f'\n{self.space}{colors.light_red}• {colors.white}Clan     -> {colors.light_red}{response["raw"]["clan"] if response["raw"]["clan"] != None else "Aucun"}'
             )
             
@@ -570,6 +575,8 @@ class ui:
                 result = {'code': 429}
             else:
                 result = {'code': 404}
+        
+        print(result)
         
         if result['code'] == 404:
             print(f'\n{self.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}ID Discord introuvable{colors.reset}')
