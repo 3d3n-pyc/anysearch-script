@@ -53,6 +53,10 @@ class utilsClass:
         system('start update.py')
         exit()
     
+    def get_own_ip(self):
+        response = requests.get('https://api.ipify.org?format=json')
+        return response['ip']
+    
     def get_config(self):
         if not path.exists('config.json'):
             default = {
@@ -208,6 +212,17 @@ class ui:
     
     def menu(self):
         self.base()
+        
+        key = utils.get_key()
+        response = utils.get_cooldown()
+        if response['status_name'] == 'Free':
+            if key != 'none':
+                print(f'\n{self.space}{colors.white}( {colors.light_red}🔑{colors.white} ) {colors.light_red}Clé API invalide')
+            
+            isVPN = utils.is_ip_vpn(utils.get_own_ip())
+            if isVPN['hosting'] or isVPN['proxy'] or isVPN['mobile']:
+                print(f'\n{self.space}{colors.white}( {colors.light_red}🔒{colors.white} ) {colors.light_red}VPN détecté')
+        
         return input(
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}01{colors.white}) Recherche à partir d\'un pseudo'
             f'\n{self.space}{colors.light_red}• {colors.white}({colors.light_red}02{colors.white}) Recherche à partir d\'une IP'
@@ -376,7 +391,7 @@ class ui:
             mutual_guilds = response['mutual_guilds']
             _mutual_guilds = ''
             for i, guild in enumerate(mutual_guilds):
-                _mutual_guilds += f'\n{self.space}{colors.light_red}{'┆' if i != len(mutual_guilds) - 1 else '╰'} {colors.light_red}{guild["name"]} {colors.light_gray}({guild["id"]})'
+                _mutual_guilds += f'\n{self.space}{colors.light_red}{"┆" if i != len(mutual_guilds) - 1 else "╰"} {colors.light_red}{guild["name"]} {colors.light_gray}({guild["id"]})'
             
             print(
                 f'\n{self.space}{colors.light_red}• {colors.white}Pseudo   -> {colors.light_red}{response['name'] if response['discriminator'] == "0" else f"{response['name']}#{response['discriminator']}"}'
@@ -997,7 +1012,7 @@ class ui:
         for item in data:
             print(f'\n{self.space}{colors.light_red}• {colors.white}Version {colors.light_red}{item["version"]}{colors.white}')
             for i, line in enumerate(item['data']):
-                print(f'{self.space}{colors.light_red}{'┆' if i != len(item['data']) - 1 else '╰'} {colors.white}{line}')
+                print(f'{self.space}{colors.light_red}{"┆" if i != len(item['data']) - 1 else "╰"} {colors.white}{line}')
 
         input(f'\n{self.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
         
@@ -1095,7 +1110,7 @@ if __name__ == '__main__':
             
             print(f'\n{ui.space}{colors.white}( {colors.red}⚡{colors.white}) {colors.red}Une erreur est survenue{colors.reset}')
             for i, line in enumerate(ERROR):
-                print(f'  {ui.space}{colors.red}{'┆' if i != len(ERROR) - 1 else '╰'} {colors.white}{line}')
+                print(f'  {ui.space}{colors.red}{"┆" if i != len(ERROR) - 1 else "╰"} {colors.white}{line}')
             
             input(f'\n{ui.space}{colors.light_red}• {colors.white}Appuyez sur {colors.light_red}ENTRÉE{colors.white} pour continuer...')
             continue
